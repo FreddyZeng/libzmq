@@ -33,7 +33,7 @@ LABEL maintainer="ZeroMQ Project <zeromq@imatix.com>"
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apk update && apk add --no-cache \
-    krb5-dev \
+    krb5-libs \
     libsodium
 
 COPY --from=builder /usr/local /usr/local
