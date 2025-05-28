@@ -13,11 +13,15 @@ RUN apk update && apk add --no-cache \
     
 WORKDIR /opt/libzmq
 COPY . .
-RUN ./autogen.sh \
-    && ./configure --prefix=/usr/local --with-libsodium --with-libgssapi_krb5 \
-    && make \
-    && make check \
-    && make install
+RUN ./autogen.sh
+
+RUN ./configure --prefix=/usr/local --with-libsodium --with-libgssapi_krb5
+
+RUN make
+
+RUN make check
+
+RUN make install
 
 FROM alpine:3.14
 LABEL maintainer="ZeroMQ Project <zeromq@imatix.com>"
