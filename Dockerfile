@@ -39,4 +39,4 @@ RUN apk update && apk add --no-cache \
     libsodium
 
 COPY --from=builder /usr/local /usr/local
-RUN ldconfig && ldconfig -p | grep libzmq
+
