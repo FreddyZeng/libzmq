@@ -1,7 +1,6 @@
 FROM alpine:3.14 AS builder
 LABEL maintainer="ZeroMQ Project <zeromq@imatix.com>"
 ARG DEBIAN_FRONTEND=noninteractive
-ENV CFLAGS="-O2 -Wno-error"
 
 RUN apk update && apk add --no-cache \
     autoconf \
