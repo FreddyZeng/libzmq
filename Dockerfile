@@ -7,7 +7,7 @@ RUN apk update && apk add --no-cache \
     automake \
     git \
     krb5-dev \
-    libsodium \
+    libsodium-dev \
     libtool \
     pkgconfig
     
