@@ -11,6 +11,10 @@ RUN apk update && apk add --no-cache \
     libtool \
     pkgconfig
     
+RUN apk add --no-cache \
+       git python3 npm make g++ linux-headers curl pkgconfig openssl-dev jq \
+       build-base musl-dev
+    
 WORKDIR /opt/libzmq
 COPY . .
 RUN ./autogen.sh
