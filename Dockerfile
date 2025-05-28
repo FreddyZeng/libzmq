@@ -26,6 +26,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apk update \
     && apk add \
         libkrb5-dev \
-        libsodium23
+        libsodium
 COPY --from=builder /usr/local /usr/local
 RUN ldconfig && ldconfig -p | grep libzmq
