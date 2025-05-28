@@ -1,8 +1,8 @@
-FROM debian:buster-slim AS builder
+FROM alpine:3.14 AS builder
 LABEL maintainer="ZeroMQ Project <zeromq@imatix.com>"
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq \
-    && apt-get install -qq --yes --no-install-recommends \
+RUN apk update \
+    && apk add \
         autoconf \
         automake \
         build-essential \
@@ -20,13 +20,12 @@ RUN ./autogen.sh \
     && make check \
     && make install
 
-FROM debian:buster-slim
+FROM alpine:3.14
 LABEL maintainer="ZeroMQ Project <zeromq@imatix.com>"
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq \
-    && apt-get install -qq --yes --no-install-recommends \
+RUN apk update \
+    && apk add \
         libkrb5-dev \
-        libsodium23 \
-    && rm -rf /var/lib/apt/lists/*
+        libsodium23
 COPY --from=builder /usr/local /usr/local
 RUN ldconfig && ldconfig -p | grep libzmq
