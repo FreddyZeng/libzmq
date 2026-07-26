@@ -1,9 +1,9 @@
 # CMake build script for ZeroMQ
 
 if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL Darwin)
-  cmake_minimum_required(VERSION 3.0.2)
+  cmake_minimum_required(VERSION 3.0.2...3.31)
 else()
-  cmake_minimum_required(VERSION 2.8.12)
+  cmake_minimum_required(VERSION 2.8.12...3.31)
 endif()
 
 project(ZeroMQ)
@@ -383,13 +383,14 @@ if(WIN32)
       "${ZMQ_WIN32_WINNT_DEFAULT}"
       CACHE STRING "Value to set _WIN32_WINNT to for building [default=autodetect from build environment]")
 
-  # On Windows Vista or greater, with MSVC 2013 or greater, default to epoll (which is required on Win 10 for ipc
-  # support)
+  # On Windows Vista or greater, default to epoll for MSVC 2013+ and MinGW
+  # to avoid falling back to select, which is incompatible with IPC transport.
   if(ZMQ_WIN32_WINNT GREATER "0x05FF"
-     AND MSVC_VERSION GREATER 1799
      AND POLLER STREQUAL ""
      AND NOT ZMQ_HAVE_WINDOWS_UWP)
-    set(POLLER "epoll")
+    if(MSVC_VERSION GREATER 1799 OR MINGW)
+      set(POLLER "epoll")
+    endif()
   endif()
 
   add_definitions(-D_WIN32_WINNT=${ZMQ_WIN32_WINNT})
@@ -491,9 +492,9 @@ execute_process(
   OUTPUT_VARIABLE CACHELINE_SIZE
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(CACHELINE_SIZE STREQUAL ""
+   OR CACHELINE_SIZE STREQUAL "undefined"
    OR CACHELINE_SIZE EQUAL 0
-   OR CACHELINE_SIZE EQUAL -1
-   OR CACHELINE_SIZE STREQUAL "undefined")
+   OR CACHELINE_SIZE EQUAL -1)
   set(ZMQ_CACHELINE_SIZE 64)
 else()
   set(ZMQ_CACHELINE_SIZE ${CACHELINE_SIZE})
@@ -772,6 +773,7 @@ if (NOT MSVC)
     zmq_check_tcp_keepalive()
     zmq_check_tcp_tipc()
     zmq_check_getrandom()
+    zmq_check_vsock()
   endif()
 endif()
 
@@ -1160,6 +1162,9 @@ set(cxx-sources
     vmci_address.hpp
     vmci_connecter.hpp
     vmci_listener.hpp
+    vsock_address.hpp
+    vsock_connecter.hpp
+    vsock_listener.hpp
     windows.hpp
     wire.hpp
     xpub.hpp
@@ -1231,6 +1236,10 @@ message(STATUS "Building with VMCI")
   set(ZMQ_HAVE_VMCI 1)
   include_directories(${VMCI_INCLUDE_DIRS})
   list(APPEND cxx-sources vmci_address.cpp vmci_connecter.cpp vmci_listener.cpp vmci.cpp)
+endif()
+
+if(ZMQ_HAVE_VSOCK)
+  list(APPEND cxx-sources vsock_address.cpp vsock_connecter.cpp vsock_listener.cpp)
 endif()
 
 if(ZMQ_HAVE_TIPC)
@@ -1756,7 +1765,7 @@ if(WITH_DOC)
   endif()
 endif()
 
-if(WIN32)
+if(WIN32 AND NOT MINGW)
   set(ZEROMQ_CMAKECONFIG_INSTALL_DIR
       "CMake"
       CACHE STRING "install path for ZeroMQConfig.cmake")
@@ -1914,4 +1923,10 @@ option(ENABLE_NO_EXPORT "Build with empty ZMQ_EXPORT macro, bypassing platform-b
 if(ENABLE_NO_EXPORT)
   message(STATUS "Building with empty ZMQ_EXPORT macro")
   add_definitions(-DZMQ_NO_EXPORT)
+endif()
+
+if (ENABLE_CURVE)
+  add_executable(curve_keygen tools/curve_keygen.cpp)
+  target_link_libraries(curve_keygen libzmq)
+  install(TARGETS curve_keygen RUNTIME DESTINATION bin)
 endif()
